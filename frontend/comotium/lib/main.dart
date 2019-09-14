@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       title: title,
       home: MyHomePage(
         title: title,
-        channel: IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?content_type=audio/x-wav&access_token=02e7V81XTRIT4m827osnIV95EFNr13W-k1FoF7bu88otGSuzH7llEMNx46F-ahQDFFLLIyzZFcd3ntFWHQ1BLoIKxn15I'),
+        channel: IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1'),
       ),
     );
   }
