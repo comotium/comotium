@@ -8,6 +8,9 @@ import 'package:web_socket_channel/io.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:mic_stream/mic_stream.dart';
+import 'dart:async';
+
 
 void main() => runApp(MyApp());
 
@@ -38,6 +41,23 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller = TextEditingController();
+  Stream<List<int>> stream;
+  StreamSubscription<List<int>> listener;
+
+  void _record() {
+    setState(() {
+      stream = microphone(sampleRate: 44100);
+      widget.channel.sink.addStream(stream);
+      // Start listening to the stream
+      // listener = stream.listen((samples) => print(samples));
+    });
+  }
+
+  void _stopRecord() {
+    setState(() {
+      listener.cancel();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +84,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text(snapshot.hasData ? '${snapshot.data}' : 'no data'),
                 );
               },
+            ),
+            new FlatButton(
+                onPressed: _record,
+                child: new Text("Record Stream")
+            ),
+            new FlatButton(
+                onPressed: _stopRecord,
+                child: new Text("Stop Recording")
             )
           ],
         ),
@@ -78,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _sendMessage() async {
     debugPrint('CLICKED');
-      widget.channel.sink.add("Asdf");
+
   }
 
   @override

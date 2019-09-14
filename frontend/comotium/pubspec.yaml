@@ -20,6 +20,7 @@ dependencies:
 
   flutter:
     sdk: flutter
+  mic_stream: ^0.2.0+2
   web_socket_channel: ^1.0.15
   fluttertoast: ^3.1.0
 
