@@ -1,7 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:web_socket_channel/io.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() => runApp(MyApp());
 
@@ -70,8 +76,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _sendMessage() {
-      widget.channel.sink.addStream(stream);
+  void _sendMessage() async {
+    debugPrint('CLICKED');
+      widget.channel.sink.add();
   }
 
   @override
