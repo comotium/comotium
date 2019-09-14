@@ -1,0 +1,33 @@
+{
+  "compileOnSave": true,
+  "include": [
+    "src/"
+  ],
+  "compilerOptions": {
+    "outDir": "build",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "types": [
+      "node",
+      "express"
+    ],
+    "esModuleInterop": true,
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declarationMap": true,
+    "inlineSources": false,
+    "declaration": true,
+    "stripInternal": true,
+    "lib": [
+      "es2016",
+      "dom"
+    ],
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata" : true,
+    "experimentalDecorators": true
+  }
+}
