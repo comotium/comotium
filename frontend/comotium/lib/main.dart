@@ -71,9 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _sendMessage() {
-      widget.channel.sink.add(
-          '{"access_token":"02e7V81XTRIT4m827osnIV95EFNr13W-k1FoF7bu88otGSuzH7llEMNx46F-ahQDFFLLIyzZFcd3ntFWHQ1BLoIKxn15I","content_type":"audio/x-wav"}'
-      );
+      widget.channel.sink.addStream(stream);
   }
 
   @override
