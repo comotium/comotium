@@ -78,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _sendMessage() async {
     debugPrint('CLICKED');
-      widget.channel.sink.add();
+      widget.channel.sink.add("Asdf");
   }
 
   @override
