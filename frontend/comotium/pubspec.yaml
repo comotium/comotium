@@ -23,6 +23,8 @@ dependencies:
   mic_stream: ^0.2.0+2
   web_socket_channel: ^1.0.15
   fluttertoast: ^3.1.0
+  text_to_speech_api: ^0.1.0
+  audioplayer: ^0.5.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
