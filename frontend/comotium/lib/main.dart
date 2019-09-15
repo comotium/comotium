@@ -30,8 +30,9 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    final title = 'Comotium';
+    final title = '';
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: title,
       home: MyHomePage(
         title: title,
@@ -63,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/questions'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/questions'));
     request.files.add(MultipartFile.fromBytes(
       'file',
       imageBytes,
@@ -84,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _perspectiveImage(File image) async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/perspective'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/perspective'));
     request.files.add(await MultipartFile.fromPath(
       'file',
       image.path,
@@ -187,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _submitAnswers() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/process'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/process'));
     request.fields.addAll(answers);
     request.files.add(MultipartFile.fromBytes(
       'file',
@@ -276,42 +277,156 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.purple[400],
         title: Text(widget.title),
       ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
+        body:
+//      Padding(
+//      padding: const EdgeInsets.all(20.0),
+//      child: Row(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Column(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Text('Upload with ease - Click below',
+//          style: TextStyle(
+//          color: Colors.blueAccent,
+//          fontWeight: FontWeight.w700,
+//          fontSize: 28.0))
+//      ],
+//      ),
+
+      Padding(
+          padding: const EdgeInsets.all(16),
+
+//    child: Row(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Column(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Text('Upload with ease - Click below',
+//          style: TextStyle(
+//          color: Colors.blueAccent,
+//          fontWeight: FontWeight.w700,
+//          fontSize: 28.0))
+//      ],
+//      ),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                new Material(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(24.0),
-                    child: new FlatButton(
-                        onPressed: _choose,
-                        child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: isLoading ? new CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xffffffff))) : Icon(
-                                  Icons.file_upload, color: Colors.white,
-                                  size: 30.0),
+
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    new Container(
+                      margin: const EdgeInsets.only(top: 10),
+
+                      child: Text("   Welcome to Comodium!   ",
+                      style: TextStyle(
+                        color: Colors.black38.withOpacity(.7),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 25.0,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 10.0,
+                            color: Color.fromARGB(150, 150, 150, 150),
+                            offset: Offset(5.0, 5.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text("Upload with ease.",
+                        style: TextStyle(
+                          color: Colors.black12.withOpacity(.7),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 25.0,
+                          shadows: [
+                          Shadow(
+                            blurRadius: 10.0,
+                            color: Color.fromARGB(150, 150, 150, 150),
+                            offset: Offset(5.0, 5.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                new Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  child: Material(
+                  color: Colors.tealAccent,
+                  borderRadius: BorderRadius.circular(24.0),
+                  child: new FlatButton(
+
+                      onPressed: () async {
+                          await _play('Hello');
+                          await _play('Co-modium is the latin word for');
+                          await _play('with ease');
+                          await _play('click the yellow button to upload your file');
+                      },
+                      child: Center(
+                          child: Padding(
+                          padding: EdgeInsets.all(18.0),
+                              child: Icon(
+                              Icons.info, color: Colors.white,
+                              size: 30.0),
+                          )
+                      )
+                    )
+                  )
+                ),
+                new Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    child: Material(
+                        color: Colors.amberAccent,
+                        borderRadius: BorderRadius.circular(24.0),
+                        child: new FlatButton(
+
+                            onPressed: _choose,
+                            child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: isLoading ? new CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)) : Icon(
+                                      Icons.file_upload, color: Colors.white,
+                                      size: 30.0),
+                                )
                             )
                         )
-                    )
+                    ),
                 ),
-                Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: imageBytes == null
-                          ? Text(isLoading ? 'Loading...' : 'No Image Selected')
-                          : new FlatButton(
-                        onPressed: _download,
-                        child: Image.memory(imageBytes),
-                      )
+                new Container(
+                    child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: imageBytes == null
+                              ? Text(isLoading ? 'Loading...' : 'No Image Selected')
+                              : new FlatButton(
+                            onPressed: _download,
+                            child: Image.memory(imageBytes),
+                          )
+                        )
                     )
                 )
             ]
           ),
-        ),
+        ],
+
+
+      ),
+    )
     );
   }
 }
