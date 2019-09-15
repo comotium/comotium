@@ -54,7 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Field> questions;
   Map<String, String> answers;
   AudioPlayer audioPlugin = new AudioPlayer();
-  TextToSpeechService service = TextToSpeechService('AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
+  TextToSpeechService service = TextToSpeechService(
+      'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
   void _record() {
     setState(() {
@@ -67,12 +68,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _stopRecord() {
-    setState(() {
-    });
+    setState(() {});
   }
 
   Future<List<Field>> _fetchQuestions() async {
-    var request = new http.MultipartRequest('POST', Uri.parse('http://1f3827b2.ngrok.io/questions'));
+    var request = new http.MultipartRequest(
+        'POST', Uri.parse('http://1f3827b2.ngrok.io/questions'));
     request.files.add(MultipartFile.fromBytes(
       'file',
       imageBytes,
@@ -81,7 +82,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final response = await request.send();
 
     Completer<List<Field>> c = new Completer();
-    response.stream.transform(utf8.decoder).transform(json.decoder).listen((value) {
+    response.stream.transform(utf8.decoder).transform(json.decoder).listen((
+        value) {
       dynamic data = value;
       final List responseJson = data['fields'];
       c.complete(responseJson.map((m) => new Field.fromJson(m)).toList());
@@ -91,7 +93,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Uint8List> _perspectiveImage(File image) async {
-    var request = new http.MultipartRequest('POST', Uri.parse('http://1f3827b2.ngrok.io/perspective'));
+    var request = new http.MultipartRequest(
+        'POST', Uri.parse('http://1f3827b2.ngrok.io/perspective'));
     request.files.add(await MultipartFile.fromPath(
       'file',
       image.path,
@@ -118,7 +121,8 @@ class _MyHomePageState extends State<MyHomePage> {
         continue;
       }
 
-      String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') + question.prompt;
+      String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') +
+          question.prompt;
 
       // read prompt
 
@@ -126,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       String answer = ''; // get and store the answer
 
-      switch(answer.trim().toLowerCase()) {
+      switch (answer.trim().toLowerCase()) {
         case 'skip':
           break;
         case 'repeat':
@@ -190,63 +194,75 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-
-        title: Text(widget.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Form(
-              child: TextFormField(
-                controller: _controller,
-                decoration: InputDecoration(labelText: 'Send a message'),
-              ),
-            ),
-            StreamBuilder(
-              stream: widget.channel.stream,
-              builder: (context, snapshot) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Text(snapshot.hasData ? '${snapshot.data}' : 'no data'),
-                );
-              },
-            ),
-            new FlatButton(
-                onPressed: _record,
-                child: new Text("Record Stream")
-            ),
-            new FlatButton(
-                onPressed: _stopRecord,
-                child: new Text("Stop Recording")
-            ),
-            Text(questions == null ? 'No questions' : questions.map((field) {
-              return field.id;
-            }).join('; ')),
-            imageBytes == null ? Text('No Image Selected') : Image.memory(imageBytes),
-            new Material(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(24.0),
-              child: new FlatButton(
-                onPressed: _choose,
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Icon(Icons.file_upload, color: Colors.white, size: 30.0),
-                  )
-                )
-              )
-            ),
-          ]
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendMessage,
-        tooltip: 'Send message',
-        child: Icon(Icons.send),// This trailing comma makes auto-formatting nicer for build methods.
-    ));
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Form(
+                  child: TextFormField(
+                    controller: _controller,
+                    decoration: InputDecoration(labelText: 'Send a message'),
+                  ),
+                ),
+                StreamBuilder(
+                  stream: widget.channel.stream, builder: (context, snapshot) {
+                  if (snapshot.data != null &&
+                      snapshot.data.contains("final")) {
+                    String output = (json.decode(snapshot.data)['elements']
+                        .map((element) {
+                      return element['value'];
+                    }).join(' '));
+                    debugPrint(output);
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24.0),
+                    child: Text(
+                        snapshot.hasData ? '${snapshot.data}' : 'no data'),
+                  );
+                },
+                ),
+                new FlatButton(
+                    onPressed: _record,
+                    child: new Text("Record Stream")
+                ),
+                new FlatButton(
+                    onPressed: _stopRecord,
+                    child: new Text("Stop Recording")
+                ),
+                Text(
+                    questions == null ? 'No questions' : questions.map((field) {
+                      return field.id;
+                    }).join('; ')),
+                imageBytes == null ? Text('No Image Selected') : Image.memory(
+                    imageBytes),
+                new Material(
+                    color: Colors.blueAccent,
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: new FlatButton(
+                        onPressed: _choose,
+                        child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Icon(
+                                  Icons.file_upload, color: Colors.white,
+                                  size: 30.0),
+                            )
+                        )
+                    )
+                ),
+              ]
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _sendMessage,
+          tooltip: 'Send message',
+          child: Icon(Icons
+              .send), // This trailing comma makes auto-formatting nicer for build methods.
+        ));
   }
 
   void _sendMessage() async {
