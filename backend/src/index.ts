@@ -314,7 +314,7 @@ app.post('/process', (req, res) => {
     let answer = value;
     switch(field.type) {
       case FieldType.Checkbox:
-        answer = value === 'yes' ? '  X' : '';
+        answer = value === 'yes' ? 'X' : '';
         break;
       case FieldType.Number:
         answer = String(wordsToNumbers(answer)).replace(/ /g, '');
@@ -328,7 +328,7 @@ app.post('/process', (req, res) => {
         break;
     }
 
-    image.drawText(field.position![0], field.position![1], answer);
+    image.drawText(field.position![0] + (field.type === FieldType.Checkbox ? 5 : 0), field.position![1], answer);
   });
 
   image.toBuffer('jpg', (err, buffer) => {
