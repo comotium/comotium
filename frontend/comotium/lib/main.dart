@@ -17,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import 'Field.dart';
 
@@ -56,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Field> questions;
   Map<String, String> answers;
   AudioPlayer audioPlugin = new AudioPlayer();
+  bool isLoading = false;
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
@@ -200,6 +202,10 @@ class _MyHomePageState extends State<MyHomePage> {
     File image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
+    setState(() {
+      isLoading = true;
+    });
+
     Uint8List imageBytes = await _perspectiveImage(image);
 
     setState(() {
@@ -210,18 +216,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       this.questions = questions;
+      isLoading = false;
     });
 
     final answers = await _askQuestions();
 
     setState(() {
       this.answers = answers;
+      isLoading = true;
     });
 
     imageBytes = await _submitAnswers();
 
     setState(() {
       this.imageBytes = imageBytes;
+      isLoading = false;
     });
   }
 
@@ -249,6 +258,20 @@ class _MyHomePageState extends State<MyHomePage> {
     return c.future;
   }
 
+  void _download() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final file = await new File('${tempDir.path}/image.jpg').create();
+      file.writeAsBytesSync(imageBytes);
+
+      final channel = const MethodChannel('channel:me.albie.share/share');
+      channel.invokeMethod('shareFile', 'image.jpg');
+
+    } catch (e) {
+      print('Share error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -268,16 +291,25 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Center(
                             child: Padding(
                               padding: EdgeInsets.all(16.0),
-                              child: Icon(
+                              child: isLoading ? new CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xffffffff))) : Icon(
                                   Icons.file_upload, color: Colors.white,
                                   size: 30.0),
                             )
                         )
                     )
                 ),
-                imageBytes == null ? Text('No Image Selected') : Image.memory(
-                    imageBytes),
-              ]
+                Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: imageBytes == null
+                          ? Text(isLoading ? 'Loading...' : 'No Image Selected')
+                          : new FlatButton(
+                        onPressed: _download,
+                        child: Image.memory(imageBytes),
+                      )
+                    )
+                )
+            ]
           ),
         ),
     );
