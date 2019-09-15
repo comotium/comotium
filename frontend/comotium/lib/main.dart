@@ -162,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
           } while (i > 1 && questions[i].type == 'SECTION');
           i -= 1;
           break;
+        case 'stock':
         case 'stop':
           end = true;
           break;
