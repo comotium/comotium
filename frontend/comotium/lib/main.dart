@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:text_to_speech_api/text_to_speech_api.dart';
 import 'package:audioplayer/audioplayer.dart';
+import 'package:wakelock/wakelock.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -61,6 +62,13 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isLoading = false;
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
+
+  @override
+  void initState() {
+    super.initState();
+
+    Wakelock.enable();
+  }
 
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
