@@ -52,29 +52,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller = TextEditingController();
-  Stream<List<int>> stream;
-  StreamSubscription<List<int>> listener;
   Uint8List imageBytes;
   List<Field> questions;
   Map<String, String> answers;
   AudioPlayer audioPlugin = new AudioPlayer();
-  var channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
-
-  void _record() {
-    setState(() {
-      stream = microphone(sampleRate: 44100);
-      // Start listening to the stream
-      channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
-      listener = stream.listen((samples) => channel.sink.add(samples));
-      // widget.channel.sink.addStream(stream);
-    });
-  }
-
-  void _stopRecord() {
-    setState(() {});
-  }
 
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
@@ -107,7 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final response = await request.send();
 
-    debugPrint('getting bytes');
     return await response.stream.toBytes();
   }
 
@@ -115,6 +97,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Map<String, String> answers = new Map();
 
     bool end = false;
+
+    await _play('Please answer each question after it is asked. Valid commands are: repeat, skip, back, stop.');
 
     for (int i = 0; i < questions.length; i++) {
       Field question = questions[i];
@@ -129,9 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
       String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') +
           question.prompt;
 
-      print('start' + prompt);
       await _play(prompt);
-      print('finish' + prompt);
 
       if (question.type == 'SECTION') continue;
 
@@ -151,11 +133,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
           String output = '';
           for (dynamic element in data['elements']) {
-            print(element);
             String value = element['value'];
-            print(value);
             String type = element['type'];
-            print(type);
             if (type != 'punct') output = output + ' ' + value;
           }
 
@@ -166,25 +145,36 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
 
-      String answer = await c.future;
+      String answer = '';
+      String output = (await c.future).trim().toLowerCase();
 
-      switch (answer.trim().toLowerCase()) {
+      switch (output) {
         case 'skip':
           break;
+        case '<unk>':
         case '':
         case 'repeat':
           i -= 1;
           break;
         case 'back':
-          i -= 2;
+          do {
+            i -= 1;
+          } while (i > 1 && questions[i].type == 'SECTION');
+          i -= 1;
           break;
-        case 'and':
-        case 'end':
+        case 'stop':
           end = true;
           break;
+        default:
+          if (question.type == 'CHECKBOX' && output != 'yes' && output != 'no') {
+            i -= 1;
+          }
+          answer = output;
       }
 
-      answers.putIfAbsent(question.id, () {
+      answers.update(question.id, (old) {
+        return answer;
+      }, ifAbsent: () {
         return answer;
       });
     }
@@ -192,12 +182,24 @@ class _MyHomePageState extends State<MyHomePage> {
     return answers;
   }
 
+  Future<Uint8List> _submitAnswers() async {
+    var request = new http.MultipartRequest(
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/process'));
+    request.fields.addAll(answers);
+    request.files.add(MultipartFile.fromBytes(
+      'file',
+      imageBytes,
+    ));
+
+    final response = await request.send();
+    return await response.stream.toBytes();
+  }
+
   void _choose() async {
     File image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
     Uint8List imageBytes = await _perspectiveImage(image);
-    debugPrint('got bytes');
 
     setState(() {
       this.imageBytes = imageBytes;
@@ -213,6 +215,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       this.answers = answers;
+    });
+
+    imageBytes = await _submitAnswers();
+
+    setState(() {
+      this.imageBytes = imageBytes;
     });
   }
 
@@ -243,9 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
-
         title: Text(widget.title),
       ),
         body: Padding(
@@ -253,56 +259,6 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Form(
-                  child: TextFormField(
-                    controller: _controller,
-                    decoration: InputDecoration(labelText: 'Send a message'),
-                  ),
-                ),
-                StreamBuilder(
-                  stream: channel.stream, builder: (context, snapshot) {
-                  if (snapshot.data != null) {
-                    dynamic jsonData = json.decode(snapshot.data);
-
-                    if (jsonData['type'] == 'final') {
-                      String output = (jsonData['elements']
-                          .map((element) {
-                        return element['value'];
-                      }).join(' '));
-                      debugPrint(output);
-                      debugPrint('');
-                      debugPrint('');
-                      debugPrint('');
-                      debugPrint('STOP=============================');
-                      debugPrint('');
-                      debugPrint('');
-                      debugPrint('');
-
-                      listener.cancel();
-                      channel = null;
-                    }
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Text(
-                        snapshot.hasData ? '${snapshot.data}' : 'no data'),
-                  );
-                },
-                ),
-                new FlatButton(
-                    onPressed: _record,
-                    child: new Text("Record Stream")
-                ),
-                new FlatButton(
-                    onPressed: _stopRecord,
-                    child: new Text("Stop Recording")
-                ),
-                Text(
-                    questions == null ? 'No questions' : questions.map((field) {
-                      return field.id;
-                    }).join('; ')),
-                imageBytes == null ? Text('No Image Selected') : Image.memory(
-                    imageBytes),
                 new Material(
                     color: Colors.blueAccent,
                     borderRadius: BorderRadius.circular(24.0),
@@ -318,20 +274,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                     )
                 ),
+                imageBytes == null ? Text('No Image Selected') : Image.memory(
+                    imageBytes),
               ]
           ),
         ),
     );
-
-  }
-
-  void _sendMessage() async {
-    debugPrint('CLICKED');
-  }
-
-  @override
-  void dispose() {
-    channel.sink.close();
-    super.dispose();
   }
 }

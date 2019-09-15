@@ -25,6 +25,7 @@
     "express-fileupload": "^1.1.6-alpha.4",
     "gm": "^1.23.1",
     "lodash": "^4.17.15",
-    "shortid": "^2.2.15"
+    "shortid": "^2.2.15",
+    "words-to-numbers": "^1.5.1"
   }
 }
