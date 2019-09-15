@@ -259,7 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent[5],
+        backgroundColor: Colors.purple[400],
         title: Text(widget.title),
       ),
         body:
@@ -282,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //      ),
 
       Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const EdgeInsets.all(1),
 
 //    child: Row(
 //      mainAxisAlignment: MainAxisAlignment.center,
@@ -308,17 +308,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     new Container(
-                      margin: const EdgeInsets.only(top: 50),
+                      margin: const EdgeInsets.only(top: 10),
 
                       child: Text("   Welcome to Comodium!   ",
                       style: TextStyle(
-                        color: Colors.pinkAccent[400].withOpacity(.7),
+                        color: Colors.black38.withOpacity(.7),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
                         shadows: [
                           Shadow(
                             blurRadius: 10.0,
-                            color: Color.fromARGB(170, 200, 100, 100),
+                            color: Color.fromARGB(150, 150, 150, 150),
                             offset: Offset(5.0, 5.0),
                           ),
                         ],
@@ -328,15 +328,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Text("Upload with ease",
+                    Text("Upload with ease.",
                       style: TextStyle(
-                        color: Colors.pinkAccent[400].withOpacity(.7),
+                        color: Colors.black12.withOpacity(.7),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
                         shadows: [
                         Shadow(
                           blurRadius: 10.0,
-                          color: Color.fromARGB(170, 200, 100, 100),
+                          color: Color.fromARGB(150, 150, 150, 150),
                           offset: Offset(5.0, 5.0),
                         ),
                       ],
@@ -346,7 +346,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
 
                 new Container(
-                  margin: const EdgeInsets.only(top: 60),
+                  margin: const EdgeInsets.only(top: 10),
                   child: Material(
                   color: Colors.tealAccent,
                   borderRadius: BorderRadius.circular(24.0),
@@ -359,7 +359,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Center(
                     child: Padding(
-                    padding: EdgeInsets.all(30.0),
+                    padding: EdgeInsets.all(18.0),
                         child: Icon(
                         Icons.info, color: Colors.white,
                         size: 30.0),
@@ -369,7 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   )
           ),
                 new Container(
-                    margin: const EdgeInsets.only(top: 60),
+                    margin: const EdgeInsets.only(top: 10),
                     child: Material(
                     color: Colors.amberAccent,
                     borderRadius: BorderRadius.circular(24.0),
@@ -378,7 +378,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: _choose,
                         child: Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(30.0),
+                                  padding: EdgeInsets.all(18.0),
                                   child: Icon(
                                       Icons.file_upload, color: Colors.white,
                                       size: 30.0),
@@ -388,7 +388,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                 ),
                 new Container(
-                    margin: const EdgeInsets.only(top: 25),
+                    margin: const EdgeInsets.only(top: 10),
                   child: imageBytes == null ? new Text('   No Image Selected')
                         : new FlatButton(
                       onPressed: _download,
