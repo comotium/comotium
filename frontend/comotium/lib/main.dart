@@ -312,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                       child: Text("   Welcome to Comodium!   ",
                       style: TextStyle(
-                        color: Colors.black38.withOpacity(.7),
+                        color: Colors.black38.withOpacity(.6),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
                         shadows: [
@@ -330,7 +330,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: <Widget>[
                     Text("Upload with ease.",
                       style: TextStyle(
-                        color: Colors.black12.withOpacity(.7),
+                        color: Colors.black12.withOpacity(.6),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
                         shadows: [
