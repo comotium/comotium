@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:text_to_speech_api/text_to_speech_api.dart';
 import 'package:audioplayer/audioplayer.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
     ]);
     final title = '';
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: title,
       home: MyHomePage(
         title: title,
@@ -257,6 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.blueAccent[5],
         title: Text(widget.title),
       ),
         body:
@@ -306,25 +309,37 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: <Widget>[
                     new Container(
                       margin: const EdgeInsets.only(top: 50),
-                      child: Text("      Welcome to Comodium!   ",
+
+                      child: Text("   Welcome to Comodium!   ",
                       style: TextStyle(
-                        color: Colors.pinkAccent[400],
+                        color: Colors.pinkAccent[400].withOpacity(.7),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 10.0,
+                            color: Color.fromARGB(170, 200, 100, 100),
+                            offset: Offset(5.0, 5.0),
+                          ),
+                        ],
                       ),
-                    ),)
-
-                  ],
-                ),
+                    ),),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Text("            Upload with ease",
+                    Text("Upload with ease",
                       style: TextStyle(
-                        color: Colors.pinkAccent[400],
+                        color: Colors.pinkAccent[400].withOpacity(.7),
                         fontWeight: FontWeight.w700,
                         fontSize: 25.0,
+                        shadows: [
+                        Shadow(
+                          blurRadius: 10.0,
+                          color: Color.fromARGB(170, 200, 100, 100),
+                          offset: Offset(5.0, 5.0),
+                        ),
+                      ],
                       ),
                     ),
                   ],
@@ -374,7 +389,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 new Container(
                     margin: const EdgeInsets.only(top: 25),
-                  child: imageBytes == null ? new Text('                                  No Image Selected')
+                  child: imageBytes == null ? new Text('   No Image Selected')
                         : new FlatButton(
                       onPressed: _download,
                       child: Image.memory(imageBytes),
@@ -389,9 +404,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
               ]
           ),
-        ),
+    ],
 
 
+    ),
+    )
     );
   }
 }
