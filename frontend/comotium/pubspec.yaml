@@ -25,8 +25,10 @@ dependencies:
   image_picker: ^0.4.12+1 # latest version without AndroidX
 
   fluttertoast: ^3.1.0
+
   text_to_speech_api: ^0.1.0
   audioplayer: ^0.5.2
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
