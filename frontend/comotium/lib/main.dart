@@ -328,7 +328,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     new Container(
                       margin: const EdgeInsets.only(top: 10),
 
-                      child: Text("   Welcome to Comodium!   ",
+                      child: Text("   Welcome to Comotium!   ",
                       style: TextStyle(
                         color: Colors.black38.withOpacity(.6),
                         fontWeight: FontWeight.w700,
