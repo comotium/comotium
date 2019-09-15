@@ -34,7 +34,6 @@ class MyApp extends StatelessWidget {
       title: title,
       home: MyHomePage(
         title: title,
-        channel: IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1'),
       ),
     );
   }
@@ -53,8 +52,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller = TextEditingController();
-  Stream<List<int>> stream;
-  StreamSubscription<List<int>> listener;
   Uint8List imageBytes;
   List<Field> questions;
   Map<String, String> answers;
@@ -62,23 +59,9 @@ class _MyHomePageState extends State<MyHomePage> {
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
-  void _record() {
-    setState(() {
-      stream = microphone(sampleRate: 44100);
-      _play('hello world');
-      widget.channel.sink.addStream(stream);
-      // Start listening to the stream
-      // listener = stream.listen((samples) => print(samples));
-    });
-  }
-
-  void _stopRecord() {
-    setState(() {});
-  }
-
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://1f3827b2.ngrok.io/questions'));
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/questions'));
     request.files.add(MultipartFile.fromBytes(
       'file',
       imageBytes,
@@ -99,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _perspectiveImage(File image) async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://1f3827b2.ngrok.io/perspective'));
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/perspective'));
     request.files.add(await MultipartFile.fromPath(
       'file',
       image.path,
@@ -107,7 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final response = await request.send();
 
-    debugPrint('getting bytes');
     return await response.stream.toBytes();
   }
 
@@ -115,6 +97,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Map<String, String> answers = new Map();
 
     bool end = false;
+
+    await _play('Please answer each question after it is asked. Valid commands are: repeat, skip, back, stop.');
 
     for (int i = 0; i < questions.length; i++) {
       Field question = questions[i];
@@ -129,27 +113,68 @@ class _MyHomePageState extends State<MyHomePage> {
       String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') +
           question.prompt;
 
-      // read prompt
+      await _play(prompt);
 
       if (question.type == 'SECTION') continue;
 
-      String answer = ''; // get and store the answer
 
-      switch (answer.trim().toLowerCase()) {
+      Stream<List<int>> stream = microphone(sampleRate: 44100);
+      // Start listening to the stream
+
+      Completer c = new Completer();
+      IOWebSocketChannel channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
+      StreamSubscription<List<int>> listener = stream.listen((samples) => channel.sink.add(samples));
+      channel.stream.listen((value) {
+        var data = jsonDecode(value);
+
+        if (data['type'] == 'final') {
+          listener.cancel();
+          channel.sink.close();
+
+          String output = '';
+          for (dynamic element in data['elements']) {
+            String value = element['value'];
+            String type = element['type'];
+            if (type != 'punct') output = output + ' ' + value;
+          }
+
+          debugPrint(output);
+          if (!c.isCompleted) {
+            c.complete(output);
+          }
+        }
+      });
+
+      String answer = '';
+      String output = (await c.future).trim().toLowerCase();
+
+      switch (output) {
         case 'skip':
           break;
+        case '<unk>':
+        case '':
         case 'repeat':
           i -= 1;
           break;
         case 'back':
-          i -= 2;
+          do {
+            i -= 1;
+          } while (i > 1 && questions[i].type == 'SECTION');
+          i -= 1;
           break;
-        case 'end':
+        case 'stop':
           end = true;
           break;
+        default:
+          if (question.type == 'CHECKBOX' && output != 'yes' && output != 'no') {
+            i -= 1;
+          }
+          answer = output;
       }
 
-      answers.putIfAbsent(question.id, () {
+      answers.update(question.id, (old) {
+        return answer;
+      }, ifAbsent: () {
         return answer;
       });
     }
@@ -157,12 +182,24 @@ class _MyHomePageState extends State<MyHomePage> {
     return answers;
   }
 
+  Future<Uint8List> _submitAnswers() async {
+    var request = new http.MultipartRequest(
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/process'));
+    request.fields.addAll(answers);
+    request.files.add(MultipartFile.fromBytes(
+      'file',
+      imageBytes,
+    ));
+
+    final response = await request.send();
+    return await response.stream.toBytes();
+  }
+
   void _choose() async {
     File image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
     Uint8List imageBytes = await _perspectiveImage(image);
-    debugPrint('got bytes');
 
     setState(() {
       this.imageBytes = imageBytes;
@@ -179,6 +216,16 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       this.answers = answers;
     });
+
+    imageBytes = await _submitAnswers();
+
+    setState(() {
+      this.imageBytes = imageBytes;
+    });
+  }
+
+  void _download() {
+
   }
 
   @override
@@ -186,22 +233,29 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
   }
 
-  void _play(String source) async {
+  Future<void> _play(String source) async {
     File query = await service.textToSpeech(
         text: source,
         voiceName: 'en-GB-Wavenet-A',
         audioEncoding: 'MP3',
         languageCode: 'en-GB'
     );
+
+    Completer c = new Completer();
+    audioPlugin.onPlayerStateChanged.listen((s) {
+      if (s == AudioPlayerState.STOPPED && !c.isCompleted) {
+        c.complete();
+      }
+    });
+
     await audioPlugin.play(query.path, isLocal: true);
+    return c.future;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
-
         title: Text(widget.title),
       ),
         body:
@@ -224,7 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //      ),
 
       Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(30.0),
 
 //    child: Row(
 //      mainAxisAlignment: MainAxisAlignment.center,
@@ -244,99 +298,99 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Text("       Welcome to Comodium - Upload with ease",
-                        style: TextStyle(
-                            color: Colors.pinkAccent[400],
-                            fontWeight: FontWeight.w700,
-                            fontSize: 20.0,
-                        ),
+                    new Container(
+                      margin: const EdgeInsets.only(top: 50),
+                      child: Text("      Welcome to Comodium!   ",
+                      style: TextStyle(
+                        color: Colors.pinkAccent[400],
+                        fontWeight: FontWeight.w700,
+                        fontSize: 25.0,
+                      ),
+                    ),)
+
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Text("            Upload with ease",
+                      style: TextStyle(
+                        color: Colors.pinkAccent[400],
+                        fontWeight: FontWeight.w700,
+                        fontSize: 25.0,
+                      ),
                     ),
                   ],
                 ),
-                new Material(
+
+                new Container(
+                  margin: const EdgeInsets.only(top: 60),
+                  child: Material(
                   color: Colors.tealAccent,
                   borderRadius: BorderRadius.circular(24.0),
-              child: new FlatButton(
-                onPressed: () async {
-                  await _play('Co-medium is the latin word for with ease');
+                  child: new FlatButton(
+
+                      onPressed: () async {
+                  await _play('Co-modium is the latin word for');
+                  await _play('with ease');
                   await _play('click the yellow button to upload your file');
                 },
                 child: Center(
                     child: Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(30.0),
                         child: Icon(
                         Icons.info, color: Colors.white,
                         size: 30.0),
                     )
                 )
               )
+                  )
           ),
-                StreamBuilder(
-                  stream: widget.channel.stream, builder: (context, snapshot) {
-                  if (snapshot.data != null &&
-                      snapshot.data.contains("final")) {
-                    String output = (json.decode(snapshot.data)['elements']
-                        .map((element) {
-                      return element['value'];
-                    }).join(' '));
-                    debugPrint(output);
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Text(
-                        snapshot.hasData ? '${snapshot.data}' : 'no data'),
-                  );
-                },
-                ),
-                new FlatButton(
-                    onPressed: _record,
-                    child: new Text("Record Stream")
-                ),
-                new FlatButton(
-                    onPressed: _stopRecord,
-                    child: new Text("Stop Recording")
-                ),
-                Text(
-                    questions == null ? 'No questions' : questions.map((field) {
-                      return field.id;
-                    }).join('; ')),
-                imageBytes == null ? Text('No Image Selected') : Image.memory(
-                    imageBytes),
-                new Material(
+                new Container(
+                    margin: const EdgeInsets.only(top: 60),
+                    child: Material(
                     color: Colors.amberAccent,
                     borderRadius: BorderRadius.circular(24.0),
                     child: new FlatButton(
+
                         onPressed: _choose,
                         child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Icon(
-                                  Icons.file_upload, color: Colors.white,
-                                  size: 30.0),
+                                child: Padding(
+                                  padding: EdgeInsets.all(30.0),
+                                  child: Icon(
+                                      Icons.file_upload, color: Colors.white,
+                                      size: 30.0),
+                                )
                             )
                         )
                     )
                 ),
+                new Container(
+                    margin: const EdgeInsets.only(top: 25),
+                  child: imageBytes == null ? new Text('                                  No Image Selected')
+                        : new FlatButton(
+                      onPressed: _download,
+                      child: Image.memory(imageBytes),
+                    )
+                  //child: new Text(imageBytes == null ? ('                                  No Image Selected') : '')
+                    //imageBytes == null ? Text('                                  No Image Selected')
+//                        : new FlatButton(
+//                      onPressed: _download,
+//                      child: Image.memory(imageBytes),
+//                    )
+                ),
+
               ]
           ),
         ),
 
 
     );
-
-  }
-
-  void _sendMessage() async {
-    debugPrint('CLICKED');
-  }
-
-  @override
-  void dispose() {
-    widget.channel.sink.close();
-    super.dispose();
   }
 }

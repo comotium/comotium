@@ -9,6 +9,7 @@ import childProcess from 'child_process';
 
 import shortid from 'shortid';
 import _ from 'lodash';
+import wordsToNumbers from 'words-to-numbers';
 
 enum FieldType {
   Text = 'TEXT',
@@ -116,19 +117,19 @@ const fields: IField[] = [
   {
     id: 'spouseFirstName',
     type: FieldType.Text,
-    position: [],
+    position: [250, 768],
     prompt: 'if joint return, spouse\'s first name and initial',
   },
   {
     id: 'spouseLastName',
     type: FieldType.Text,
-    position: [],
+    position: [1388, 768],
     prompt: 'last name',
   },
   {
     id: 'spouseSocial',
     type: FieldType.Number,
-    position: [],
+    position: [2688, 756],
     prompt: 'spouse\'s social security number',
   },
   {
@@ -140,31 +141,31 @@ const fields: IField[] = [
   {
     id: 'spouseDependent',
     type: FieldType.Checkbox,
-    position: [],
+    position: [726, 850],
     prompt: 'someone can claim your spouse as a dependent',
   },
   {
     id: 'spouseBornBefore1954',
     type: FieldType.Checkbox,
-    position: [],
+    position: [1740, 836],
     prompt: 'spouse was born before january 2, 1954',
   },
   {
     id: 'spouseBlind',
     type: FieldType.Checkbox,
-    position: [],
+    position: [228, 912],
     prompt: 'spouse is blind',
   },
   {
     id: 'spouseItemizesSeparate',
     type: FieldType.Checkbox,
-    position: [],
+    position: [726, 916],
     prompt: 'spouse itemizes on a separate return or you were dual-status alien',
   },
   {
     id: 'fullYearHealth',
     type: FieldType.Checkbox,
-    position: [],
+    position: [2672, 848],
     prompt: 'full-year health care coverage or exempt (see inst.)',
   },
   {
@@ -194,13 +195,13 @@ const fields: IField[] = [
   {
     id: 'presidentialCampaignYou',
     type: FieldType.Checkbox,
-    position: [],
+    position: [2910, 1036],
     prompt: 'you',
   },
   {
     id: 'presidentialCampaignSpouse',
     type: FieldType.Checkbox,
-    position: [],
+    position: [3076, 1028],
     prompt: 'spouse',
   },
   {
@@ -260,14 +261,13 @@ app.post('/perspective', (req, res) => {
 
   const fileName = `${shortid.generate()}-${file.name}`;
   const path = `/tmp/${fileName}`
-  const outPath = `/tmp/o_${fileName}`
+  const outPath = `/tmp/o_${fileName}.jpg`
 
   file.mv(path);
-  const cp = childProcess.exec(`convert ${path} -distort Perspective "${perspectiveShift}" ${outPath}`);
+  const cp = childProcess.exec(`convert ${path} -set colorspace Gray -separate -average -define jpeg:extent=300kb -distort Perspective "${perspectiveShift}" -crop 3485x4510+0+0 ${outPath}`);
 
   cp.on('close', () => {
     gm(outPath)
-      .crop(3485, 4510, 0, 0)
       .toBuffer('jpg', (err, buffer) => {
         if (err) res.status(500).json({ success: false, error: `Image processing error: ${err}` });
 
@@ -299,34 +299,7 @@ app.post('/process', (req, res) => {
 
   const file = req.files['file'] as fileUpload.UploadedFile;
 
-  const answers = {
-    single: 'yes',
-    headOfHousehold: 'no',
-    marriedJointly: 'no',
-    marriedSeparately: 'no',
-    qualifyingWidower: 'no',
-    firstName: 'david z',
-    lastName: 'shen',
-    social: '123456789',
-    dependent: 'yes',
-    bornBefore1954: 'no',
-    blind: 'no',
-    spouseFirstName: '',
-    spouseLastName: '',
-    spouseSocial: '',
-    spouseDependent: '',
-    spouseBornBefore1954: '',
-    spouseBlind: '',
-    spouseItemizesSeparate: '',
-    fullYearHealth: '',
-    address: '24 tip top street',
-    apartment: '',
-    city: 'brighton ma 02135',
-    presidentialCampaignYou: 'no',
-    presidentialCampaignSpouse: 'no',
-    occupation: 'student',
-    spouseOccupation: '',
-  };
+  console.log(req.body);
 
   const image = gm(file.data, file.name)
     .fontSize(48)
@@ -334,21 +307,24 @@ app.post('/process', (req, res) => {
     .gravity('NorthWest')
     .stroke('#000000');
 
-  _.forOwn(answers, (value, key) => {
+  _.forOwn(req.body, (value, key) => {
     const field = fieldsObj[key];
     if (!field) return;
 
     let answer = value;
     switch(field.type) {
       case FieldType.Checkbox:
-        answer = value.toLowerCase() === 'yes' ? 'X' : '';
+        answer = value === 'yes' ? '  X' : '';
+        break;
+      case FieldType.Number:
+        answer = String(wordsToNumbers(answer)).replace(/ /g, '');
         break;
       case FieldType.Text:
         const numWords = value.split(' ').length;
         if (numWords > 5) {
           break;
         }
-        answer = value.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+        answer = value.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         break;
     }
 
