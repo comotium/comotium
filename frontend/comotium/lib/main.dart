@@ -19,7 +19,7 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final title = 'WebSocket Demo';
+    final title = 'Cumotium';
     return MaterialApp(
       title: title,
       home: MyHomePage(
@@ -76,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
         title: Text(widget.title),
       ),
       body: Padding(
@@ -105,16 +106,26 @@ class _MyHomePageState extends State<MyHomePage> {
             new FlatButton(
                 onPressed: _stopRecord,
                 child: new Text("Stop Recording")
-            )
-          ],
+            ),
+            new Material(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(24.0),
+              child: Center(
+                child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Icon(Icons.file_upload,
+                        color: Colors.white, size: 30.0),
+
+    )
+              )
+            )]
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _sendMessage,
         tooltip: 'Send message',
-        child: Icon(Icons.send),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        child: Icon(Icons.send),// This trailing comma makes auto-formatting nicer for build methods.
+    ));
   }
 
   void _sendMessage() async {
@@ -128,3 +139,13 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 }
+
+
+
+
+
+
+
+
+
+
