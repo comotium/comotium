@@ -75,57 +75,62 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+        appBar: AppBar(
 
-        title: Text(widget.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Form(
-              child: TextFormField(
-                controller: _controller,
-                decoration: InputDecoration(labelText: 'Send a message'),
-              ),
-            ),
-            StreamBuilder(
-              stream: widget.channel.stream,
-              builder: (context, snapshot) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Text(snapshot.hasData ? '${snapshot.data}' : 'no data'),
-                );
-              },
-            ),
-            new FlatButton(
-                onPressed: _record,
-                child: new Text("Record Stream")
-            ),
-            new FlatButton(
-                onPressed: _stopRecord,
-                child: new Text("Stop Recording")
-            ),
-            new Material(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(24.0),
-              child: Center(
-                child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Icon(Icons.file_upload,
-                        color: Colors.white, size: 30.0),
-
-    )
-              )
-            )]
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendMessage,
-        tooltip: 'Send message',
-        child: Icon(Icons.send),// This trailing comma makes auto-formatting nicer for build methods.
-    ));
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Form(
+                  child: TextFormField(
+                    controller: _controller,
+                    decoration: InputDecoration(labelText: 'Send a message'),
+                  ),
+                ),
+                StreamBuilder(
+                  stream: widget.channel.stream,builder: (context, snapshot) {
+                  if(snapshot.data != null && snapshot.data.contains("final")) {
+                    String output = (json.decode(snapshot.data)['elements'].map((element) {
+                      return element['value'];
+                    }).join(' '));
+                    debugPrint(output);
+                  }
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24.0),
+                      child: Text(snapshot.hasData ? '${snapshot.data}' : 'no data'),
+                    );
+                  },
+                ),
+                new FlatButton(
+                    onPressed: _record,
+                    child: new Text("Record Stream")
+                ),
+                new FlatButton(
+                    onPressed: _stopRecord,
+                    child: new Text("Stop Recording")
+                ),
+                new Material(
+                    color: Colors.blueAccent,
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Icon(Icons.file_upload,
+                              color: Colors.white, size: 30.0),
+
+                        )
+                    )
+                )]
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _sendMessage,
+          tooltip: 'Send message',
+          child: Icon(Icons.send),// This trailing comma makes auto-formatting nicer for build methods.
+        ));
   }
 
   void _sendMessage() async {
@@ -139,13 +144,3 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 }
-
-
-
-
-
-
-
-
-
-
