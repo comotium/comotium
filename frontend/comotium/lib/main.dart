@@ -66,17 +66,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
         title: Text(widget.title),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Form(
-              child: TextFormField(
-                controller: _controller,
-                decoration: InputDecoration(labelText: 'Send a message'),
-              ),
+            Text('     Hello! Upload with ease.', style: TextStyle(
+          color: Colors.blueAccent,
+          fontWeight: FontWeight.w700,
+          fontSize: 28.0),
             ),
+
+
             StreamBuilder(
               stream: widget.channel.stream,
               builder: (context, snapshot) {
@@ -95,17 +97,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: new Text("Stop Recording")
             ),
             new Material(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(24.0),
-              child: Center(
-                child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Icon(Icons.file_upload,
-                        color: Colors.white, size: 30.0),
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(24.0),
+                child: Center(
+                    child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Icon(Icons.file_upload,
+                color: Colors.white, size: 30.0)
+            ),
 
     )
-              )
-            )]
+              )]
         ),
       ),
       floatingActionButton: FloatingActionButton(
