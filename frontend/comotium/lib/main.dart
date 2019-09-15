@@ -253,12 +253,6 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Form(
-                  child: TextFormField(
-                    controller: _controller,
-                    decoration: InputDecoration(labelText: 'Send a message'),
-                  ),
-                ),
                 StreamBuilder(
                   stream: channel.stream, builder: (context, snapshot) {
                   if (snapshot.data != null) {
@@ -323,10 +317,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
     );
 
-  }
-
-  void _sendMessage() async {
-    debugPrint('CLICKED');
   }
 
   @override
