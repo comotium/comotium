@@ -29,7 +29,6 @@ class MyApp extends StatelessWidget {
       title: title,
       home: MyHomePage(
         title: title,
-        channel: IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1'),
       ),
     );
   }
@@ -54,16 +53,17 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Field> questions;
   Map<String, String> answers;
   AudioPlayer audioPlugin = new AudioPlayer();
+  var channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
   void _record() {
     setState(() {
       stream = microphone(sampleRate: 44100);
-      _play('hello world');
-      widget.channel.sink.addStream(stream);
       // Start listening to the stream
-      // listener = stream.listen((samples) => print(samples));
+      channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
+      listener = stream.listen((samples) => channel.sink.add(samples));
+      // widget.channel.sink.addStream(stream);
     });
   }
 
@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://1f3827b2.ngrok.io/questions'));
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/questions'));
     request.files.add(MultipartFile.fromBytes(
       'file',
       imageBytes,
@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _perspectiveImage(File image) async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://1f3827b2.ngrok.io/perspective'));
+        'POST', Uri.parse('http://d0e81c45.ngrok.io/perspective'));
     request.files.add(await MultipartFile.fromPath(
       'file',
       image.path,
@@ -124,21 +124,56 @@ class _MyHomePageState extends State<MyHomePage> {
       String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') +
           question.prompt;
 
-      // read prompt
+      print('start' + prompt);
+      await _play(prompt);
+      print('finish' + prompt);
 
       if (question.type == 'SECTION') continue;
 
-      String answer = ''; // get and store the answer
+
+      Stream<List<int>> stream = microphone(sampleRate: 44100);
+      // Start listening to the stream
+
+      Completer c = new Completer();
+      IOWebSocketChannel channel = IOWebSocketChannel.connect('wss://api.rev.ai/speechtotext/v1alpha/stream?access_token=02QP0lhYTj7-5zcCus1RDdN1UL9Wt7jQ7JjEGII9w6Layk9Z1Icu8OEXG_aAgWcXEKgPVVAK6IjMS1GBitw7EK9tk3klA&content_type=audio/x-raw;layout=interleaved;rate=44100;format=U8;channels=1');
+      StreamSubscription<List<int>> listener = stream.listen((samples) => channel.sink.add(samples));
+      channel.stream.listen((value) {
+        var data = jsonDecode(value);
+
+        if (data['type'] == 'final') {
+          listener.cancel();
+          channel.sink.close();
+
+          String output = '';
+          for (dynamic element in data['elements']) {
+            print(element);
+            String value = element['value'];
+            print(value);
+            String type = element['type'];
+            print(type);
+            if (type != 'punct') output = output + ' ' + value;
+          }
+
+          debugPrint(output);
+          if (!c.isCompleted) {
+            c.complete(output);
+          }
+        }
+      });
+
+      String answer = await c.future;
 
       switch (answer.trim().toLowerCase()) {
         case 'skip':
           break;
+        case '':
         case 'repeat':
           i -= 1;
           break;
         case 'back':
           i -= 2;
           break;
+        case 'and':
         case 'end':
           end = true;
           break;
@@ -181,14 +216,23 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
   }
 
-  void _play(String source) async {
+  Future<void> _play(String source) async {
     File query = await service.textToSpeech(
         text: source,
         voiceName: 'en-GB-Wavenet-A',
         audioEncoding: 'MP3',
         languageCode: 'en-GB'
     );
+
+    Completer c = new Completer();
+    audioPlugin.onPlayerStateChanged.listen((s) {
+      if (s == AudioPlayerState.STOPPED && !c.isCompleted) {
+        c.complete();
+      }
+    });
+
     await audioPlugin.play(query.path, isLocal: true);
+    return c.future;
   }
 
   @override
@@ -209,14 +253,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 StreamBuilder(
-                  stream: widget.channel.stream, builder: (context, snapshot) {
-                  if (snapshot.data != null &&
-                      snapshot.data.contains("final")) {
-                    String output = (json.decode(snapshot.data)['elements']
-                        .map((element) {
-                      return element['value'];
-                    }).join(' '));
-                    debugPrint(output);
+                  stream: channel.stream, builder: (context, snapshot) {
+                  if (snapshot.data != null) {
+                    dynamic jsonData = json.decode(snapshot.data);
+
+                    if (jsonData['type'] == 'final') {
+                      String output = (jsonData['elements']
+                          .map((element) {
+                        return element['value'];
+                      }).join(' '));
+                      debugPrint(output);
+                      debugPrint('');
+                      debugPrint('');
+                      debugPrint('');
+                      debugPrint('STOP=============================');
+                      debugPrint('');
+                      debugPrint('');
+                      debugPrint('');
+
+                      listener.cancel();
+                      channel = null;
+                    }
                   }
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24.0),
@@ -271,7 +328,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    widget.channel.sink.close();
+    channel.sink.close();
     super.dispose();
   }
 }
