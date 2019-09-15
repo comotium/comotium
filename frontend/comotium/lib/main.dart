@@ -65,9 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void _play(String source) async {
     File query = await service.textToSpeech(
         text: source,
-        voiceName: 'de-DE-Wavenet-D',
+        voiceName: 'en-GB-Wavenet-A',
         audioEncoding: 'MP3',
-        languageCode: 'de-DE'
+        languageCode: 'en-GB'
     );
     await audioPlugin.play(query.path, isLocal: true);
   }
