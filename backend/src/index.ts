@@ -260,14 +260,13 @@ app.post('/perspective', (req, res) => {
 
   const fileName = `${shortid.generate()}-${file.name}`;
   const path = `/tmp/${fileName}`
-  const outPath = `/tmp/o_${fileName}`
+  const outPath = `/tmp/o_${fileName}.jpg`
 
   file.mv(path);
-  const cp = childProcess.exec(`convert ${path} -distort Perspective "${perspectiveShift}" ${outPath}`);
+  const cp = childProcess.exec(`convert ${path} -set colorspace Gray -separate -average -define jpeg:extent=300kb -distort Perspective "${perspectiveShift}" -crop 3485x4510+0+0 ${outPath}`);
 
   cp.on('close', () => {
     gm(outPath)
-      .crop(3485, 4510, 0, 0)
       .toBuffer('jpg', (err, buffer) => {
         if (err) res.status(500).json({ success: false, error: `Image processing error: ${err}` });
 
@@ -275,7 +274,7 @@ app.post('/perspective', (req, res) => {
         res.end(buffer);
 
         fs.unlink(path, () => {});
-        fs.unlink(outPath, () => {});
+        // fs.unlink(outPath, () => {});
       });
   });
 });
