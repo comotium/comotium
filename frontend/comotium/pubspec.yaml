@@ -14,7 +14,7 @@ description: The comotium application
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.0 <3.0.0"
 
 dependencies:
 
@@ -22,17 +22,17 @@ dependencies:
     sdk: flutter
   mic_stream: ^0.2.0+2
   web_socket_channel: ^1.0.15
-  fluttertoast: ^3.1.0
-<<<<<<< HEAD
+  image_picker: ^0.4.12+1 # latest version without AndroidX
 
-=======
+  fluttertoast: ^3.1.0
+
   text_to_speech_api: ^0.1.0
   audioplayer: ^0.5.2
->>>>>>> 1cd0e8be4c2cf1717a9fc6792b678ccef9d5413d
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
+  http: ^0.12.0+2
 
 dev_dependencies:
   flutter_test:

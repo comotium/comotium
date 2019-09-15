@@ -36,7 +36,7 @@ const fields: IField[] = [
     prompt: '1040 U.S. individual income tax return 2018',
   },
   {
-    id: 'filing status',
+    id: 'filingStatus',
     type: FieldType.Section,
     position: [],
     prompt: 'Filing status',
@@ -268,10 +268,10 @@ app.post('/perspective', (req, res) => {
   cp.on('close', () => {
     gm(outPath)
       .crop(3485, 4510, 0, 0)
-      .toBuffer('PNG', (err, buffer) => {
+      .toBuffer('jpg', (err, buffer) => {
         if (err) res.status(500).json({ success: false, error: `Image processing error: ${err}` });
 
-        res.writeHead(200, {'Content-Type': 'image/png'});
+        res.writeHead(200, {'Content-Type': 'image/jpeg'});
         res.end(buffer);
 
         fs.unlink(path, () => {});
@@ -285,6 +285,8 @@ app.post('/questions', (req, res) => {
     res.status(400).json({ success: false, error: 'Please provide the image file.' });
     return;
   }
+
+  (req.files.file as fileUpload.UploadedFile).mv('/tmp/test.jpg');
 
   res.status(200).json({ fields });
 });
@@ -353,10 +355,10 @@ app.post('/process', (req, res) => {
     image.drawText(field.position![0], field.position![1], answer);
   });
 
-  image.toBuffer('PNG', (err, buffer) => {
+  image.toBuffer('jpg', (err, buffer) => {
     if (err) res.status(500).json({ success: false, error: `Image processing error: ${err}` });
 
-    res.writeHead(200, {'Content-Type': 'image/png'});
+    res.writeHead(200, {'Content-Type': 'image/jpeg'});
     res.end(buffer);
   });
 });
