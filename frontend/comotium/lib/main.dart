@@ -1,5 +1,4 @@
 
-import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +6,8 @@ import 'package:http/http.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:text_to_speech_api/text_to_speech_api.dart';
+import 'package:audioplayer/audioplayer.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -23,7 +24,7 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final title = 'WebSocket Demo';
+    final title = 'Cumotium';
     return MaterialApp(
       title: title,
       home: MyHomePage(
@@ -52,10 +53,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Uint8List imageBytes;
   List<Field> questions;
   Map<String, String> answers;
+  AudioPlayer audioPlugin = new AudioPlayer();
+  TextToSpeechService service = TextToSpeechService('AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
   void _record() {
     setState(() {
       stream = microphone(sampleRate: 44100);
+      _play('hello world');
       widget.channel.sink.addStream(stream);
       // Start listening to the stream
       // listener = stream.listen((samples) => print(samples));
@@ -64,7 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _stopRecord() {
     setState(() {
-      listener.cancel();
     });
   }
 
@@ -103,7 +106,18 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Map<String, String>> _askQuestions() async {
     Map<String, String> answers = new Map();
 
-    for (Field question in questions) {
+    bool end = false;
+
+    for (int i = 0; i < questions.length; i++) {
+      Field question = questions[i];
+
+      if (end) {
+        answers.putIfAbsent(question.id, () {
+          return '';
+        });
+        continue;
+      }
+
       String prompt = (question.type == 'CHECKBOX' ? 'yes or no: ' : '') + question.prompt;
 
       // read prompt
@@ -111,6 +125,20 @@ class _MyHomePageState extends State<MyHomePage> {
       if (question.type == 'SECTION') continue;
 
       String answer = ''; // get and store the answer
+
+      switch(answer.trim().toLowerCase()) {
+        case 'skip':
+          break;
+        case 'repeat':
+          i -= 1;
+          break;
+        case 'back':
+          i -= 2;
+          break;
+        case 'end':
+          end = true;
+          break;
+      }
 
       answers.putIfAbsent(question.id, () {
         return answer;
@@ -149,10 +177,21 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
   }
 
+  void _play(String source) async {
+    File query = await service.textToSpeech(
+        text: source,
+        voiceName: 'en-GB-Wavenet-A',
+        audioEncoding: 'MP3',
+        languageCode: 'en-GB'
+    );
+    await audioPlugin.play(query.path, isLocal: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
         title: Text(widget.title),
       ),
       body: Padding(
@@ -186,20 +225,28 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(questions == null ? 'No questions' : questions.map((field) {
               return field.id;
             }).join('; ')),
-            new FlatButton(
-                onPressed: _choose,
-                child: new Text("Upload image")
-            ),
             imageBytes == null ? Text('No Image Selected') : Image.memory(imageBytes),
-          ],
+            new Material(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(24.0),
+              child: new FlatButton(
+                onPressed: _choose,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Icon(Icons.file_upload, color: Colors.white, size: 30.0),
+                  )
+                )
+              )
+            ),
+          ]
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _sendMessage,
         tooltip: 'Send message',
-        child: Icon(Icons.send),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        child: Icon(Icons.send),// This trailing comma makes auto-formatting nicer for build methods.
+    ));
   }
 
   void _sendMessage() async {
