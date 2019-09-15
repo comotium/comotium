@@ -353,6 +353,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: new FlatButton(
 
                       onPressed: () async {
+                  await _play('Hello');
                   await _play('Co-modium is the latin word for');
                   await _play('with ease');
                   await _play('click the yellow button to upload your file');
