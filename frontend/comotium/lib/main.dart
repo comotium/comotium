@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    final title = 'Comotium';
+    final title = '';
     return MaterialApp(
       title: title,
       home: MyHomePage(
@@ -204,17 +204,77 @@ class _MyHomePageState extends State<MyHomePage> {
 
         title: Text(widget.title),
       ),
-        body: Padding(
+        body:
+//      Padding(
+//      padding: const EdgeInsets.all(20.0),
+//      child: Row(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Column(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Text('Upload with ease - Click below',
+//          style: TextStyle(
+//          color: Colors.blueAccent,
+//          fontWeight: FontWeight.w700,
+//          fontSize: 28.0))
+//      ],
+//      ),
+
+      Padding(
           padding: const EdgeInsets.all(20.0),
+
+//    child: Row(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Column(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      children: <Widget>[
+//      Text('Upload with ease - Click below',
+//          style: TextStyle(
+//          color: Colors.blueAccent,
+//          fontWeight: FontWeight.w700,
+//          fontSize: 28.0))
+//      ],
+//      ),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Form(
-                  child: TextFormField(
-                    controller: _controller,
-                    decoration: InputDecoration(labelText: 'Send a message'),
-                  ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Text("       Welcome to Comodium - Upload with ease",
+                        style: TextStyle(
+                            color: Colors.pinkAccent[400],
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20.0,
+                        ),
+                    ),
+                  ],
                 ),
+                new Material(
+                  color: Colors.tealAccent,
+                  borderRadius: BorderRadius.circular(24.0),
+              child: new FlatButton(
+                onPressed: () async {
+                  await _play('Co-medium is the latin word for with ease');
+                  await _play('click the yellow button to upload your file');
+                },
+                child: Center(
+                    child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                        child: Icon(
+                        Icons.info, color: Colors.white,
+                        size: 30.0),
+                    )
+                )
+              )
+          ),
                 StreamBuilder(
                   stream: widget.channel.stream, builder: (context, snapshot) {
                   if (snapshot.data != null &&
@@ -247,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 imageBytes == null ? Text('No Image Selected') : Image.memory(
                     imageBytes),
                 new Material(
-                    color: Colors.blueAccent,
+                    color: Colors.amberAccent,
                     borderRadius: BorderRadius.circular(24.0),
                     child: new FlatButton(
                         onPressed: _choose,
@@ -264,6 +324,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ]
           ),
         ),
+
+
     );
 
   }
