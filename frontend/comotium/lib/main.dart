@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -24,7 +25,11 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final title = 'Cumotium';
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    final title = 'Comotium';
     return MaterialApp(
       title: title,
       home: MyHomePage(
