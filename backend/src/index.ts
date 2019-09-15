@@ -299,8 +299,6 @@ app.post('/process', (req, res) => {
 
   const file = req.files['file'] as fileUpload.UploadedFile;
 
-  console.log(req.body);
-
   const image = gm(file.data, file.name)
     .fontSize(48)
     .font(`${process.env.HOME}/.fonts/roboto/Roboto-Thin.ttf`)

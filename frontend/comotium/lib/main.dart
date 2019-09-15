@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:text_to_speech_api/text_to_speech_api.dart';
 import 'package:audioplayer/audioplayer.dart';
@@ -18,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import 'Field.dart';
 
@@ -58,12 +58,13 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Field> questions;
   Map<String, String> answers;
   AudioPlayer audioPlugin = new AudioPlayer();
+  bool isLoading = false;
   TextToSpeechService service = TextToSpeechService(
       'AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
   Future<List<Field>> _fetchQuestions() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/questions'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/questions'));
     request.files.add(MultipartFile.fromBytes(
       'file',
       imageBytes,
@@ -84,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _perspectiveImage(File image) async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/perspective'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/perspective'));
     request.files.add(await MultipartFile.fromPath(
       'file',
       image.path,
@@ -187,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Uint8List> _submitAnswers() async {
     var request = new http.MultipartRequest(
-        'POST', Uri.parse('http://d0e81c45.ngrok.io/process'));
+        'POST', Uri.parse('http://comotium.pantherman594.com/process'));
     request.fields.addAll(answers);
     request.files.add(MultipartFile.fromBytes(
       'file',
@@ -202,6 +203,10 @@ class _MyHomePageState extends State<MyHomePage> {
     File image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
+    setState(() {
+      isLoading = true;
+    });
+
     Uint8List imageBytes = await _perspectiveImage(image);
 
     setState(() {
@@ -212,23 +217,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       this.questions = questions;
+      isLoading = false;
     });
 
     final answers = await _askQuestions();
 
     setState(() {
       this.answers = answers;
+      isLoading = true;
     });
 
     imageBytes = await _submitAnswers();
 
     setState(() {
       this.imageBytes = imageBytes;
+      isLoading = false;
     });
-  }
-
-  void _download() {
-
   }
 
   @override
@@ -253,6 +257,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
     await audioPlugin.play(query.path, isLocal: true);
     return c.future;
+  }
+
+  void _download() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final file = await new File('${tempDir.path}/image.jpg').create();
+      file.writeAsBytesSync(imageBytes);
+
+      final channel = const MethodChannel('channel:me.albie.share/share');
+      channel.invokeMethod('shareFile', 'image.jpg');
+
+    } catch (e) {
+      print('Share error: $e');
+    }
   }
 
   @override
@@ -282,7 +300,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //      ),
 
       Padding(
-          padding: const EdgeInsets.all(1),
+          padding: const EdgeInsets.all(16),
 
 //    child: Row(
 //      mainAxisAlignment: MainAxisAlignment.center,
@@ -314,6 +332,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       style: TextStyle(
                         color: Colors.black38.withOpacity(.6),
                         fontWeight: FontWeight.w700,
+                        fontFamily: 'Open Sans',
                         fontSize: 25.0,
                         shadows: [
                           Shadow(
@@ -323,6 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ],
                       ),
+
                     ),),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -340,10 +360,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           offset: Offset(5.0, 5.0),
                         ),
                       ],
-                      ),
+
                     ),
-                  ],
-                ),
+                  ),
 
                 new Container(
                   margin: const EdgeInsets.only(top: 10),
@@ -353,63 +372,64 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: new FlatButton(
 
                       onPressed: () async {
-                  await _play('Hello');
-                  await _play('Co-modium is the latin word for');
-                  await _play('with ease');
-                  await _play('click the yellow button to upload your file');
-                },
-                child: Center(
-                    child: Padding(
-                    padding: EdgeInsets.all(18.0),
-                        child: Icon(
-                        Icons.info, color: Colors.white,
-                        size: 30.0),
+                          await _play('Hello');
+                          await _play('Co-modium is the latin word for');
+                          await _play('with ease');
+                          await _play('click the yellow button to upload your file');
+                      },
+                      child: Center(
+                          child: Padding(
+                          padding: EdgeInsets.all(18.0),
+                              child: Icon(
+                              Icons.info, color: Colors.white,
+                              size: 30.0),
+                          )
+                      )
                     )
-                )
-              )
                   )
-          ),
+                ),
                 new Container(
                     margin: const EdgeInsets.only(top: 10),
                     child: Material(
-                    color: Colors.amberAccent,
-                    borderRadius: BorderRadius.circular(24.0),
-                    child: new FlatButton(
+                        color: Colors.amberAccent,
+                        borderRadius: BorderRadius.circular(24.0),
+                        child: new FlatButton(
 
-                        onPressed: _choose,
-                        child: Center(
+                            onPressed: _choose,
+                            child: Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(18.0),
-                                  child: Icon(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: isLoading ? new CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)) : Icon(
                                       Icons.file_upload, color: Colors.white,
                                       size: 30.0),
                                 )
                             )
                         )
-                    )
+                    ),
                 ),
                 new Container(
-                    margin: const EdgeInsets.only(top: 10),
-                  child: imageBytes == null ? new Text('   No Image Selected')
-                        : new FlatButton(
-                      onPressed: _download,
-                      child: Image.memory(imageBytes),
+                    child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: imageBytes == null
+                              ? Text(isLoading ? 'Loading...' : 'No Image Selected')
+                              : new FlatButton(
+                            onPressed: _download,
+                            child: Image.memory(imageBytes),
+                          )
+                        )
                     )
-                  //child: new Text(imageBytes == null ? ('                                  No Image Selected') : '')
-                    //imageBytes == null ? Text('                                  No Image Selected')
-//                        : new FlatButton(
-//                      onPressed: _download,
-//                      child: Image.memory(imageBytes),
-//                    )
-                ),
-
-              ]
+                )
+            ]
           ),
-    ],
+        ],
 
 
+      ),
+
+    ]
+          ),
     ),
-    )
     );
   }
 }
