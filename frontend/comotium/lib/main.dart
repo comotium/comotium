@@ -1,7 +1,9 @@
 import 'dart:typed_data';
-
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/foundation.dart';
+import 'package:text_to_speech_api/text_to_speech_api.dart';
+import 'package:audioplayer/audioplayer.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:web_socket_channel/io.dart';
@@ -42,11 +44,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller = TextEditingController();
   Stream<List<int>> stream;
-  StreamSubscription<List<int>> listener;
+  AudioPlayer audioPlugin = new AudioPlayer();
+  TextToSpeechService service = TextToSpeechService('AIzaSyA1QMxxgEBWpTmh7aSi1GXRcERIDprkluE');
 
   void _record() {
     setState(() {
       stream = microphone(sampleRate: 44100);
+      _play('hello world');
       widget.channel.sink.addStream(stream);
       // Start listening to the stream
       // listener = stream.listen((samples) => print(samples));
@@ -55,8 +59,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _stopRecord() {
     setState(() {
-      listener.cancel();
     });
+  }
+
+  void _play(String source) async {
+    File query = await service.textToSpeech(
+        text: source,
+        voiceName: 'de-DE-Wavenet-D',
+        audioEncoding: 'MP3',
+        languageCode: 'de-DE'
+    );
+    await audioPlugin.play(query.path, isLocal: true);
   }
 
   @override
