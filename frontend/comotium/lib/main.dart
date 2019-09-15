@@ -332,6 +332,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       style: TextStyle(
                         color: Colors.black38.withOpacity(.7),
                         fontWeight: FontWeight.w700,
+                        fontFamily: 'Open Sans',
                         fontSize: 25.0,
                         shadows: [
                           Shadow(
@@ -351,6 +352,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         style: TextStyle(
                           color: Colors.black12.withOpacity(.7),
                           fontWeight: FontWeight.w700,
+                          fontFamily: 'Open Sans',
                           fontSize: 25.0,
                           shadows: [
                           Shadow(
